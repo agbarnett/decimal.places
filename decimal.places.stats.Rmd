@@ -1,0 +1,463 @@
+---
+title: "Decimal places for percents in abstracts"
+author: "Adrian Barnett"
+date: "23 March 2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+# to do, plot of decimal places by difference ranges?
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, comment = '', message = FALSE, dpi=300)
+options(width=10000)
+q1 = function(x){quantile(x, probs=0.25)}
+q3 = function(x){quantile(x, probs=0.75)}
+library(plyr) # for revalue
+library(diagram) # for flow diagram
+library(reshape2)
+library(doBy) # for summary stats
+library(tables) # for nice tables
+library(pander) # for nice tables
+library(ggplot2) # for nice plots
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", grey(0.4)) # colour-blind palette plus grey
+
+# CIs for multinomial 
+source('MultinomialCIsBayes.R')
+# already run winbugs? If so, just load saved results
+already.run = T
+if(already.run==T){load('Multi.results.RData')}
+
+# get the data
+load('Analysis.Ready.RData')
+# shorter label
+levels = unique(data$journal)
+labels = c('JAMA','PLOS ONE','BMJ Open','Lancet, HIV','BMJ','EHP','MJA','NEJM','Lancet, P','Lancet, O','F1000','Lancet, D&E','PLOS Med','Lancet, GH','Lancet, RM','Lancet, PH','Lancet','Lancet, H','Lancet, ID','Lancet N','Lancet, G&H','Nature','Lancet, Planet')
+data$short.journal <- revalue(data$journal, c(
+   "PLoS medicine"                           =  "PLOS Med"          ,
+ "PloS one"                                =  "PLOS ONE"      ,
+ "Nature"                                  =  "Nature"      ,
+ "F1000Research"                           =  "F1000"   ,
+ "Lancet (London, England)"                =  "Lancet"           ,
+ "The New England journal of medicine"     =  "NEJM"           ,
+ "BMJ open"                                =  "BMJ Open"           ,
+ "The Lancet. Infectious diseases"         =  "Lancet, ID"          ,
+ "The Medical journal of Australia"        =  "MJA"     ,
+ "The Lancet. Global health"               =  "Lancet, GH"     ,
+ "The Lancet. Oncology"                    =  "Lancet, O"         ,
+ "The lancet. Diabetes & endocrinology"    =  "Lancet, D&E"   ,
+ "The Lancet. Haematology"                 =  "Lancet, H"      ,
+ "BMJ (Clinical research ed.)"             =  "BMJ"    ,
+ "Environmental health perspectives"       = "EHP"    ,
+ "JAMA"                                    =  "JAMA"    ,
+ "The Lancet. Neurology"                   =  "Lancet, N"        ,
+ "The lancet. HIV"                         =  "Lancet, HIV"     ,
+ "The Lancet. Respiratory medicine"        =  "Lancet, RM"    ,
+ "The lancet. Psychiatry"                  =  "Lancet, P"      ,
+ "The lancet. Gastroenterology & hepatology"= "Lancet, G&H"   ,
+ "The Lancet. Public health"               =  "Lancet, PH"        ,
+ "The Lancet. Planetary health"            =  "Lancet, Planet"
+ ))
+```
+
+## Aim
+
+To evaluate compliance with the guidelines on the number of decimal places to use when presenting percentages in health and medical journals.
+
+## Methods
+
+Percentages were automatically extracted from abstracts and assessed for their compliance with the guidelines.
+I chose percentages rather than other statistics, such as the mean, because percentages are easily extractable as they are usually tagged with a '%'.
+
+I chose abstracts as these are freely searchable for all papers, whereas the full text is only searchable for open access publications.
+Also, the abstract is a very important summary of the work that will be read more often than the full paper.
+
+The data were accessed on `r format(date.extracted, '%Y-%b-%d')`.
+
+I ignored any negative signs as the focus was on the decimal places rather than the actual value. I also ignored any mathematical symbols, so for example, "<1%" would be recorded as 1 percent with no decimal places. For example, "incident tuberculosis occurred in six (<1%) of 795 contacts" 29273539[PMID] (PMID = pubmed ID).
+
+## Results
+
+### Flow chart of abstracts selected
+
+```{r}
+n.search = 23293 + 9854 # PLOS + original search
+n.articles = 22651 + 9243 
+n.oneperc = length(unique(data$pubmed))
+n.percents = nrow(data)
+#
+flow = function(){ # use as a function so that it can be repeated for jpeg
+  l1 = paste('Papers published in selected\njournals in 2017 (n=',format(n.search, big.mark=','),')', sep='')
+  l2 = paste('Papers that were research\narticles (n=',format(n.articles, big.mark=','),')', sep='')
+  l3 = paste('Papers with at least one\npercent in abstract (n=',format(n.oneperc, big.mark=','),')', sep='')
+  l4 = paste('Total number of\npercents (n=',format(n.percents, big.mark=','),')', sep='')
+  labels = c(l1,l2,l3,l4)
+  n.labs = length(labels)
+  M <- matrix(nrow = n.labs, ncol = n.labs, byrow = TRUE, data = 0)
+  M[2,1] = M[3,2] = M[4,3] =  "' '"
+  pos = matrix(data=c(0.5,0.9,
+                      0.5,0.63,
+                      0.5,0.36,
+                      0.5,0.1), ncol=2, byrow = T)
+  par(mai=rep(0.01,4))
+  plotmat(M, pos=pos, name=labels, main=NULL, shadow.size = 0, curve = 0, box.type = 'square', 
+          cex.txt = 0.7, box.size = 0.29, box.prop = 0.2)  
+}
+flow()
+# export to figure for paper
+jpeg('figure1.jpg', units='in', res=400, width=4, height=5, quality=100)
+flow()
+invisible(dev.off())
+```
+
+
+### Summary statistics on the number of percents per abstract
+
+```{r summary.stats}
+tab = data.frame(table(data$pubmed))
+tab = tabular(Heading('Number of percents')*Freq ~ (n=1) + mean + median + q1 + q3 + min + max, data=tab)
+pander(tab, style='simple', digits = 2, emphasize.rownames = F)
+```
+
+The median number of percents per abstract was 4, with an inter-quartile range of 2 to 8. These statistics exclude abstracts with no percentages.
+
+
+
+### Histogram of all percents in integer bins
+
+```{r outside, include=F}
+outside = sum(data$percents>100)
+outside.percent = round(1000*(outside/nrow(data)))/100
+```
+
+The histogram excludes the `r outside` (`r outside.percent`%) percents greater than 100%.
+
+```{r histogram}
+to.plot = subset(data, percents < 100.5)
+hplot = ggplot(data=to.plot, aes(x=percents))+
+  geom_histogram(breaks=seq(-0.5, 100.5, 1))+
+  theme_bw()+
+  theme(panel.grid.minor = element_blank())+
+  xlab('Observed percent')+
+  ylab('Frequency')+
+  scale_x_continuous(breaks=seq(0,101,10))
+hplot
+# export to figure for paper
+jpeg('figure2.jpg', units='in', res=400, width=5, height=4, quality = 100)
+print(hplot)
+invisible(dev.off())
+```
+
+There was clearly digit preference at multiples of 10%, particularly 50%, and at 75% and 95%. This was because there was some use of percentages as reference points, for example, 
+
+* "If screening coverage fell to 50%" in 29307386[PMID].
+* "and more than 50% of the suicides occurred in females" 28716352[PMID] 
+
+Same plot coloured by number of decimal places, or facetted by number of decimal places.
+
+### Number of abstracts where all percents follow the guidelines
+
+```{r all.correct}
+data$correct = as.numeric(data$diff==0)
+all.correct = summaryBy(correct ~ pubmed, FUN=max, data=data)
+all.correct$correct.max = factor(all.correct$correct.max, levels=0:1, labels=c('Yes','No'))
+tab = tabular(Heading('All percents correct')*correct.max + 1 ~ (n=1) + Percent("col"), data=all.correct)
+pander(tab, style='simple', digits = 2, emphasize.rownames = F)
+```
+
+The table shows the number of abstracts where all percents were correct.
+
+### Numbers of decimal places
+
+```{r decimals}
+tab = tabular(Heading('Number of decimal places')*factor(observed.dps) + 1~ (n=1) + Percent("col"), data=data)
+pander(tab, style='simple', digits = c(0,0,0), emphasize.rownames = F)
+```
+
+Most decimal places were less than 2.
+
+### Numbers of significant figures
+
+```{r sf}
+tab = tabular(Heading('Number of significant figures')*factor(observed.sfs) + 1~ (n=1) + Percent("col"), data=data)
+pander(tab, style='simple', digits = c(0,0,0), emphasize.rownames = F)
+```
+
+### Table of differences between observed and ideal decimal places
+
+```{r diff.table}
+tab = tabular(Heading('Difference')*factor(diff) + 1~ (n=1) + Percent("col"), data=data)
+pander(tab, style='simple', digits = c(0,0,0), emphasize.rownames = F)
+```
+
+Negative differences are too few digits, positive difference are too many.
+
+
+### Percents correct by journal (plot)
+
+The rows in the plot are ordered by the percent ``Just right''.
+
+```{r journal.percent, fig.width=6, fig.height=6}
+data$diff = sign(data$diff) # tranform to negative, zero or positive
+# numbers by journal 
+tab.nums = with(data, table(short.journal, diff))
+# percents by journal 
+tab = prop.table(tab.nums, 1) *100
+to.plot.percent = data.frame(tab)
+to.order = subset(to.plot.percent, diff== 0) # by most correct
+to.order = to.order[order(to.order$Freq),]
+levels =  to.order$short.journal
+to.plot.percent$short.journal = factor(as.character(to.plot.percent$short.journal), levels=levels)
+# use factor for ordering
+to.plot.percent$diff = factor(to.plot.percent$diff, levels=c(1,0,-1), ordered=T)
+to.plot.percent = to.plot.percent[order(-as.numeric(to.plot.percent$diff)),]
+bplot = ggplot(data=to.plot.percent, aes(x=factor(short.journal), y=Freq, fill=factor(diff)))+
+  geom_bar(stat= "identity")+
+  theme_bw()+
+  theme(legend.position = 'top', panel.grid.minor = element_blank(), plot.margin=unit(c(1,1,1,1),"mm"))+
+  xlab('')+
+  ylab('Percent')+
+  scale_fill_manual('Decimal\nplaces', breaks=c(-1,0,1), labels=c('Too few','Just right','Too many'), values=cbbPalette[2:4])+
+  coord_flip()
+bplot
+```
+
+### Percents correct by journal (table)
+
+Formatted for reading into Word.
+
+```{r journal.table, results='asis'}
+to.table = to.plot.percent # percents
+long = melt(tab.nums) # numbers
+for.table = merge(to.table, long, by=c('short.journal','diff')) # merge
+index = for.table$Freq<10 | for.table$Freq>90
+for.table$Freq[index] = round(for.table$Freq[index],1) # great irony here
+for.table$Freq[!index] = round(for.table$Freq[!index],0) 
+journal.list = to.order$short.journal # use this ordering
+cat('Journal&Too few&Just right&Too many&Total\n', sep='') # header
+for (j in journal.list){
+  this.few = subset(for.table, short.journal==j & diff == -1)
+  this.ideal = subset(for.table, short.journal==j & diff ==  0)
+  this.many = subset(for.table, short.journal==j & diff ==  1)
+  Total = this.few$value + this.ideal$value + this.many$value
+  cat(j, ':', this.few$Freq, '% (', this.few$value, ')', 
+         ':', this.ideal$Freq, '% (', this.ideal$value, ')',
+         ':', this.many$Freq, '% (', this.many$value, ')', 
+         ':', Total, '\n', sep='')
+}
+```
+
+### Confidence intervals for overall numbers
+
+Assuming a Bayesian Multinomial Dirichlet model.
+
+```{r ci, results='asis'}
+tab = table(data$diff)
+if(already.run==F){
+  this = multiCIs(tab)
+  multi.res = list()
+  multi.res[[1]] = this
+}
+if(already.run==T){
+  load('Multi.results.RData')
+}
+pander(multi.res[[1]], style='simple', emphasize.rownames = F)
+```
+
+### Histogram of observed range in percents from the same sentence or abstract (base 2 log-transformed)
+
+```{r diff}
+to.plot = subset(data, is.infinite(range.diff)==F)
+hplot = ggplot(data=to.plot, aes(x=log2(range.diff+1)))+
+  geom_histogram()+
+  theme_bw()+
+  ylab('Frequency')
+hplot
+```
+
+
+
+### Plot types of incorrect
+
+The plot is a summary for each journal. The plot includes 95\% confidence intervals for both percents to show the uncertainty for each journal.
+
+```{r crossplot, fig.width=6, fig.height=5}
+# numbers
+tab = with(data, table(short.journal, diff))
+to.plot.nums = data.frame(tab)
+# 
+percent.wide = dcast(subset(to.plot.percent), short.journal ~ diff)
+names(percent.wide) = c('journal','many','okay','few')
+nums.wide = dcast(subset(to.plot.nums), short.journal ~ diff)
+names(nums.wide) = c('journal','many','okay','few')
+#nums.wide = subset(nums.wide, journal != 'The Lancet. Planetary health') # too few
+percent.wide$xlower = percent.wide$xupper = percent.wide$ylower = percent.wide$yupper =NA
+if(already.run==F){
+  for (k in 1:nrow(percent.wide)){
+    this.journal = percent.wide$journal[k]
+    mnums = as.numeric(nums.wide[which(nums.wide$journal==this.journal), 2:4])
+    m = multiCIs(mnums)
+    percent.wide$xlower[k] = m$lower[1]*100
+    percent.wide$xupper[k] = m$upper[1]*100
+    percent.wide$ylower[k] = m$lower[3]*100
+    percent.wide$yupper[k] = m$upper[3]*100
+  }
+  multi.res[[2]] = percent.wide
+}
+if(already.run==T){
+  load('Multi.results.RData')
+  percent.wide = multi.res[[2]]
+}
+
+# plot
+percent.wide$cols = 1
+percent.wide$cols[grep('lancet', tolower(percent.wide$journal))] = 2
+percent.wide$cols[grep('bmj', tolower(percent.wide$journal))] = 3
+percent.wide$cols[grep('plos', tolower(percent.wide$journal))] = 4
+gplot = ggplot(data=percent.wide, aes(x=few, y=many, xmin=xlower, xmax=xupper, ymin=ylower, ymax=yupper, col=factor(cols)))+
+  geom_point()+
+  geom_errorbarh()+
+  geom_errorbar()+
+  scale_color_manual('Journal group', values=cbbPalette[2:5], labels=c('Other','Lancet','BMJ','PLOS'))+
+  theme_bw()+
+  scale_x_continuous(limits=c(0,NA))+
+  scale_y_continuous(limits=c(0,NA))+
+  xlab('Too few digits (%)')+
+  ylab('Too many digits (%)')+
+  geom_point(aes(x=0,y=0), col='black', pch=19, size=2)+
+  geom_text(aes(x=0,y=2), label='Ideal', col='black')+
+  theme(legend.position = c(0.8,0.8), panel.grid.minor = element_blank())
+#  geom_label(aes(x=few, y=many, label=short.journal))
+gplot
+# export to figure for paper
+jpeg('figure3.jpg', units='in', res=500, width=5, height=4, quality = 100)
+print(gplot)
+invisible(dev.off())
+```
+
+#### Alternative plot including journal names
+
+```{r alt.plot, fig.width=6, fig.height=5}
+gplot2 = gplot + geom_text(aes(x=few, y=many, label=journal))
+gplot2
+```
+
+### Sensitivity analysis excluding percents from 90 to 100 and digit preference percents, 10, 20, 30, 40, 50, 60, 70, 75, 80
+
+```{r table.sensitivity}
+## exclude 90 to 100
+index = data$percents>=90 & data$percents<=100
+sub = data[!index, ]
+## exclude 90 to 100
+to.exclude = c(seq(10,80,10),75)
+index = sub$percents %in% to.exclude & sub$observed.dps==0
+sub = sub[!index, ]
+## recreate numbers
+tab = with(sub, table(diff))
+if(already.run==F){
+  this = multiCIs(tab)
+  multi.res[[3]] = this
+}
+if(already.run==T){
+  load('Multi.results.RData')
+}
+pander(multi.res[[3]], style='simple', emphasize.rownames = F)
+```
+
+The table shows the new percents for all journals.
+
+```{r crossplot.sensitivity, fig.width=6, fig.height=5}
+tab = with(sub, table(diff, short.journal)) # table by journal
+to.plot.nums = data.frame(tab)
+# percents by journal (use previous table)
+tab = prop.table(tab, 2) *100
+to.plot.percent = data.frame(tab)
+# transform to wide
+percent.wide.sens = dcast(subset(to.plot.percent), short.journal ~ diff)
+names(percent.wide.sens) = c('journal','few','okay','many')
+nums.wide = dcast(subset(to.plot.nums), short.journal ~ diff)
+names(nums.wide) = c('journal','few','okay','many')
+percent.wide.sens$xlower = percent.wide.sens$xupper = percent.wide.sens$ylower = percent.wide.sens$yupper =NA
+if(already.run==F){
+  for (k in 1:nrow(percent.wide.sens)){
+    this.journal = percent.wide.sens$journal[k]
+    mnums = as.numeric(nums.wide[which(nums.wide$journal==this.journal), 2:4])
+    m = multiCIs(mnums);
+    percent.wide.sens$xlower[k] = m$lower[1]*100
+    percent.wide.sens$xupper[k] = m$upper[1]*100
+    percent.wide.sens$ylower[k] = m$lower[3]*100
+    percent.wide.sens$yupper[k] = m$upper[3]*100
+  }
+  multi.res[[4]] = percent.wide.sens
+  # save multinomial results
+  save(multi.res, file='Multi.results.RData')
+}
+if(already.run==T){
+  load('Multi.results.RData')
+  percent.wide.sens = multi.res[[4]]
+}
+
+# plot
+percent.wide.sens$cols = 1
+percent.wide.sens$cols[grep('lancet', tolower(percent.wide.sens$journal))] = 2
+percent.wide.sens$cols[grep('bmj', tolower(percent.wide.sens$journal))] = 3
+percent.wide.sens$cols[grep('plos', tolower(percent.wide.sens$journal))] = 4
+gplot = ggplot(data=percent.wide.sens, aes(x=few, y=many, xmin=xlower, xmax=xupper, ymin=ylower, ymax=yupper, col=factor(cols)))+
+  geom_point()+
+  geom_errorbarh()+
+  geom_errorbar()+
+  scale_color_manual('Journal group', values=cbbPalette[2:5], labels=c('Other','Lancet','BMJ','PLOS'))+
+  theme_bw()+
+  scale_x_continuous(limits=c(0,NA))+
+  scale_y_continuous(limits=c(0,NA))+
+  xlab('Too few digits (%)')+
+  ylab('Too many digits (%)')+
+  geom_point(aes(x=0, y=0), col='black', pch=19, size=2)+
+  geom_text(aes(x=0, y=2), label='Ideal', col='black')+
+  theme(legend.position = c(0.8,0.8), panel.grid.minor = element_blank())
+gplot
+```
+
+### Movement between two previous plots
+
+The arrows show how journals moved between the full analysis and the sensitivity analysis excluding the digit preference results.
+
+```{r movement, fig.width=6, fig.height=5}
+one = subset(percent.wide, select=c('journal','few','many'))
+names(one) = c('journal','x0','y0')
+two = subset(percent.wide.sens, select=c('journal','few','many','cols'))
+names(two) = c('journal','x1','y1','cols')
+three = merge(one, two, by='journal')
+par(mai=c(0.9,0.9,0.1,0.1), las=1)
+maxx = max(c(three$x0, three$x1))
+maxy = max(c(three$y0, three$y1))
+#plot(0:50, 0:50, xlab='Too few digits(%)', ylab='Too many digits(%)', type='n')
+plot(three$x0, three$y0, xlab='Too few digits(%)', ylab='Too many digits(%)', type='p', col=cbbPalette[three$cols+1], xlim = c(0,maxx), ylim=c(0,maxy))
+points(x=0, y=0, pch=19)
+text(x=0.5, y=2, 'Ideal')
+for(k in 1:nrow(three)){
+  arrows(x0=three$x0[k], x1=three$x1[k], y0=three$y0[k], y1=three$y1[k], length=0.1, col=cbbPalette[three$cols[k]+1], lwd=1.2)
+}
+```
+
+### Look for threshold in each journal
+
+```{r table}
+data$below = factor(data$percents < 10)
+tab = tabular(Heading('Below 10%')*below ~ factor(diff)*((n=1)+Percent('row')), data=data)
+pander(tab, digits = 2, emphasize.rownames = F)
+```
+
+```{r threshold}
+library(splines)
+sub = subset(data, journal=='Nature' & percents<100.5)
+model = glm(I(diff==0) ~ ns(percents,3), data, family=binomial())
+plot = ggplot(data=sub, aes(x=factor(diff), y=percents))+
+  geom_boxplot()+
+  theme_bw()
+plot
+```
+
+
+Problem: 29276017[pmid] has 95% with no explanation (i.e., no ``CI or PI''); hard to program.
+
+
+
