@@ -212,7 +212,7 @@ for (a in 1:9000){ ######## should be 1:nrow(meta) for full run
       correct[percents < 0.1] = 2 # allow two decimal places for very small numbers
       correct[percents < 0.01] = 3 # allow three decimal places for VERY small numbers
       correct[percents < 0.001] = 4 # allow four decimal places for extremely small numbers
-      correct[range.diff < small.range] = 2 # allow two decimal places where range is small
+      #correct[range.diff < small.range & range.diff > 0] = 2 # allow two decimal places where range is small
       # frame of scores with meta data
       frame = data.frame(pubmed=meta[a,]$pubmed, journal=meta[a,]$journal, percents=percents, sentence.number=sentences, observed.dps=dps, observed.sfs=sfs, ideal.dps=correct, range.diff=range.diff)
       # add to final data
@@ -234,9 +234,6 @@ for (a in 1:9000){ ######## should be 1:nrow(meta) for full run
 date.extracted = as.Date(Sys.time())
 outfile = paste(ofile, a, '.RData', sep='')
 save(data, small.range, date.extracted, file=outfile)
-
-## TO DO, add marker of file name
-# check for doubles, check what journals appear in what files
 
 # put data back together
 files = dir(pattern='interim')
@@ -281,3 +278,4 @@ data$journal = gsub('&amp;','&', data$journal)
 index = data$percents==0
 data$ideal.dps[index] = 1
 save(date.extracted, small.range, data, file='Analysis.Ready.RData')
+
