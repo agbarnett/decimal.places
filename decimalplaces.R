@@ -14,10 +14,7 @@ decimalplaces <- function(x) {
 # significant figures
 significant.figures <- function(x) {
   # if just a zero 
-  if(x==0){
-    res = 1 
-    return(res)
-  }
+  just.zero = which(x==0)
   # remove decimal point
   x = gsub('\\.', '', x)
   # remove up to five leading zeros
@@ -26,5 +23,6 @@ significant.figures <- function(x) {
   }
   # count remaining digits
   res = str_count(pattern='[0-9]', x)
+  res[just.zero] = 1 # just zero should be 1 significant figure
   return(res)
 }
