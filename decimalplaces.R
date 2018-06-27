@@ -13,6 +13,11 @@ decimalplaces <- function(x) {
 
 # significant figures
 significant.figures <- function(x) {
+  # if just a zero 
+  if(x==0){
+    res = 1 
+    return(res)
+  }
   # remove decimal point
   x = gsub('\\.', '', x)
   # remove up to five leading zeros
