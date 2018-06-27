@@ -24,3 +24,4 @@ To replicate the results in the paper, use: `decimal.places.stats.Rmd` combined 
 
 To recreate the entire analysis data set use: `make.data.R` combined with x and z
 
+Archived data and code as at time of initial publication (version 1): http://doi.org/10.5281/zenodo.1213574
