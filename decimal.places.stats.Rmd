@@ -1,7 +1,7 @@
 ---
 title: "Decimal places for percents in abstracts"
 author: "Adrian Barnett"
-date: "23 March 2018"
+date: "27 June 2018"
 output: word_document
 ---
 
@@ -26,8 +26,8 @@ already.run = T
 if(already.run==T){load('Multi.results.RData')}
 
 # get the data
-load('Analysis.Ready.RData')
-# shorter label
+load('Analysis.Ready.RData') # from make.data.R
+# shorter journal labels
 levels = unique(data$journal)
 labels = c('JAMA','PLOS ONE','BMJ Open','Lancet, HIV','BMJ','EHP','MJA','NEJM','Lancet, P','Lancet, O','F1000','Lancet, D&E','PLOS Med','Lancet, GH','Lancet, RM','Lancet, PH','Lancet','Lancet, H','Lancet, ID','Lancet N','Lancet, G&H','Nature','Lancet, Planet')
 data$short.journal <- revalue(data$journal, c(
@@ -160,12 +160,13 @@ tab = tabular(Heading('All percents correct')*correct.max + 1 ~ (n=1) + Percent(
 pander(tab, style='simple', digits = 2, emphasize.rownames = F)
 ```
 
-The table shows the number of abstracts where all percents were correct.
+The table shows the number of abstracts where all percents followed the guidelines.
+So if an abstract contained four percents, it would only be classed as `Yes' if all four met the guidelines.
 
 ### Numbers of decimal places
 
 ```{r decimals}
-tab = tabular(Heading('Number of decimal places')*factor(observed.dps) + 1~ (n=1) + Percent("col"), data=data)
+tab = tabular(Heading('Number of decimal places')*factor(observed.dps) + 1 ~ (n=1) + Percent("col"), data=data)
 pander(tab, style='simple', digits = c(0,0,0), emphasize.rownames = F)
 ```
 
@@ -181,15 +182,15 @@ pander(tab, style='simple', digits = c(0,0,0), emphasize.rownames = F)
 ### Table of differences between observed and ideal decimal places
 
 ```{r diff.table}
-tab = tabular(Heading('Difference')*factor(diff) + 1~ (n=1) + Percent("col"), data=data)
+tab = tabular(Heading('Difference')*factor(diff) + 1 ~ (n=1) + Percent("col"), data=data)
 pander(tab, style='simple', digits = c(0,0,0), emphasize.rownames = F)
 ```
 
-Negative differences are too few digits, positive difference are too many.
+Negative differences indicate too few digits, positive difference indicate too many.
 
 ### Percents correct by journal (plot)
 
-The rows in the plot are ordered by the percent ``Just right''.
+The rows (journals) in the plot are ordered by the percent ``Just right''.
 
 ```{r journal.percent, fig.width=6, fig.height=6}
 data$diff = sign(data$diff) # tranform to negative, zero or positive
@@ -255,6 +256,7 @@ if(already.run==F){
 if(already.run==T){
   load('Multi.results.RData')
 }
+row.names(multi.res[[1]]) = c('Too few','Just right','Too many')
 pander(multi.res[[1]], style='simple', emphasize.rownames = F)
 ```
 
@@ -289,9 +291,9 @@ if(already.run==F){
     this.journal = percent.wide$journal[k]
     mnums = as.numeric(nums.wide[which(nums.wide$journal==this.journal), 2:4])
     m = multiCIs(mnums)
-    percent.wide$xlower[k] = m$lower[1]*100
+    percent.wide$xlower[k] = m$lower[1]*100 # too few
     percent.wide$xupper[k] = m$upper[1]*100
-    percent.wide$ylower[k] = m$lower[3]*100
+    percent.wide$ylower[k] = m$lower[3]*100 # too many
     percent.wide$yupper[k] = m$upper[3]*100
   }
   multi.res[[2]] = percent.wide
@@ -353,15 +355,16 @@ if(already.run==F){
 if(already.run==T){
   load('Multi.results.RData')
 }
+row.names(multi.res[[3]]) = c('Too few','Just right','Too many')
 pander(multi.res[[3]], style='simple', emphasize.rownames = F)
 ```
 
-The table shows the new percents for all journals.
+The table above shows the new percents combining results across all journals.
 
 ```{r crossplot.sensitivity, fig.width=6, fig.height=5}
 tab = with(sub, table(diff, short.journal)) # table by journal
 to.plot.nums = data.frame(tab)
-# percents by journal (use previous table)
+# percents by journal
 tab = prop.table(tab, 2) *100
 to.plot.percent = data.frame(tab)
 # transform to wide
@@ -375,9 +378,9 @@ if(already.run==F){
     this.journal = percent.wide.sens$journal[k]
     mnums = as.numeric(nums.wide[which(nums.wide$journal==this.journal), 2:4])
     m = multiCIs(mnums);
-    percent.wide.sens$xlower[k] = m$lower[1]*100
+    percent.wide.sens$xlower[k] = m$lower[1]*100 # too few
     percent.wide.sens$xupper[k] = m$upper[1]*100
-    percent.wide.sens$ylower[k] = m$lower[3]*100
+    percent.wide.sens$ylower[k] = m$lower[3]*100 # too many
     percent.wide.sens$yupper[k] = m$upper[3]*100
   }
   multi.res[[4]] = percent.wide.sens
@@ -389,7 +392,8 @@ if(already.run==T){
   percent.wide.sens = multi.res[[4]]
 }
 
-# plot
+## plot
+# colour the big publishers
 percent.wide.sens$cols = 1
 percent.wide.sens$cols[grep('lancet', tolower(percent.wide.sens$journal))] = 2
 percent.wide.sens$cols[grep('bmj', tolower(percent.wide.sens$journal))] = 3
@@ -412,40 +416,21 @@ gplot
 
 ### Movement between two previous plots
 
-The arrows show how journals moved between the full analysis and the sensitivity analysis excluding the digit preference results.
+The arrows show how journals moved between the analysis using all observations and the sensitivity analysis excluding the digit preference results.
 
 ```{r movement, fig.width=6, fig.height=5}
-one = subset(percent.wide, select=c('journal','few','many'))
+one = subset(percent.wide, select=c('journal','few','many')) # all observations
 names(one) = c('journal','x0','y0')
-two = subset(percent.wide.sens, select=c('journal','few','many','cols'))
+two = subset(percent.wide.sens, select=c('journal','few','many','cols')) # sensitivity analysis
 names(two) = c('journal','x1','y1','cols')
 three = merge(one, two, by='journal')
-par(mai=c(0.9,0.9,0.1,0.1), las=1)
+par(mai=c(0.9, 0.9, 0.1, 0.1), las=1)
 maxx = max(c(three$x0, three$x1))
 maxy = max(c(three$y0, three$y1))
-#plot(0:50, 0:50, xlab='Too few digits(%)', ylab='Too many digits(%)', type='n')
 plot(three$x0, three$y0, xlab='Too few digits(%)', ylab='Too many digits(%)', type='p', col=cbbPalette[three$cols+1], xlim = c(0,maxx), ylim=c(0,maxy))
 points(x=0, y=0, pch=19)
 text(x=0.5, y=2, 'Ideal')
 for(k in 1:nrow(three)){
   arrows(x0=three$x0[k], x1=three$x1[k], y0=three$y0[k], y1=three$y1[k], length=0.1, col=cbbPalette[three$cols[k]+1], lwd=1.2)
 }
-```
-
-### Look for threshold in each journal
-
-```{r table}
-data$below = factor(data$percents < 10)
-tab = tabular(Heading('Below 10%')*below ~ factor(diff)*((n=1)+Percent('row')), data=data)
-pander(tab, digits = 2, emphasize.rownames = F)
-```
-
-```{r threshold}
-library(splines)
-sub = subset(data, journal=='Nature' & percents<100.5)
-model = glm(I(diff==0) ~ ns(percents,3), data, family=binomial())
-plot = ggplot(data=sub, aes(x=factor(diff), y=percents))+
-  geom_boxplot()+
-  theme_bw()
-plot
 ```
