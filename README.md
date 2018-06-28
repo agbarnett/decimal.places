@@ -20,8 +20,8 @@ The code requires the following R packages:
 * stringr
 * XML
 
-To replicate the results in the paper, use: `decimal.places.stats.Rmd` combined with x and y
+To replicate the results in the paper, use: `decimal.places.stats.Rmd` combined with `Multi.results.RData` and `Analysis.Ready.RData`
 
-To recreate the entire analysis data set use: `make.data.R` combined with x and z
+To recreate the entire analysis data set use: `make.data.R` optionally combined with `journal.meta.RData` and `journal.meta.ii.RData` to skip the step to create the lists of papers.
 
-Archived data and code as at time of initial publication (version 1): http://doi.org/10.5281/zenodo.1213574
+Archived data and code as at time of initial publication (version 1.0): http://doi.org/10.5281/zenodo.1213574
