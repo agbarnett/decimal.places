@@ -1,5 +1,5 @@
 # decimal.places
-How many decimal places are used in abstracts? Code for paper in F1000: "Missing the point: are journals using the ideal number of decimal places?", published here: https://f1000research.com/articles/7-450/
+How many decimal places are used in abstracts? Code for paper in F1000: "Missing the point: are journals using the ideal number of decimal places?", published here: https://f1000research.com/articles/7-450/.
 
 The key files are:
 
@@ -20,8 +20,8 @@ The code requires the following R packages:
 * stringr
 * XML
 
-To replicate the results in the paper, use: `decimal.places.stats.Rmd` combined with `Multi.results.RData` and `Analysis.Ready.RData`
+To replicate the results in the paper, use: `decimal.places.stats.Rmd` combined with `Multi.results.RData` and `Analysis.Ready.RData`.
 
 To recreate the entire analysis data set use: `make.data.R` optionally combined with `journal.meta.RData` and `journal.meta.ii.RData` to skip the step to create the lists of papers.
 
-Archived data and code as at time of initial publication (version 1.0): http://doi.org/10.5281/zenodo.1213574
+Archived data and code as at time of initial publication (version 1.0): http://doi.org/10.5281/zenodo.1213574.
