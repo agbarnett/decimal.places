@@ -26,4 +26,4 @@ To replicate the results in the paper, use: `decimal.places.stats.Rmd` combined 
 
 To recreate the entire analysis data set use: `make.data.R` optionally combined with `journal.meta.RData` and `journal.meta.ii.RData` to skip the step to create the lists of papers.
 
-Archived data and code as at time of initial publication (version 1.0): http://doi.org/10.5281/zenodo.1213574.
+Archived data and code as at time of initial publication (version 1.0): http://doi.org/10.5281/zenodo.1213574 and after comments from peer reviewers (version 1.1): http://doi.org/10.5281/zenodo.1300056.
