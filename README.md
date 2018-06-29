@@ -22,7 +22,7 @@ The code requires the following R packages:
 * stringr
 * XML
 
-To replicate the results in the paper, use: `decimal.places.stats.Rmd` combined with `Multi.results.RData` and `Analysis.Ready.RData`. If `Multi.results.RData` does not exist it will be created by the Rmarkdown code.
+To replicate the results in the paper, use: `decimal.places.stats.Rmd` combined with `Multi.results.RData` and `Analysis.Ready.RData`. If `Multi.results.RData` does not exist, it will be created by the Rmarkdown code.
 
 To recreate the entire analysis data set use: `make.data.R` optionally combined with `journal.meta.RData` and `journal.meta.ii.RData` to skip the step to create the lists of papers.
 
