@@ -5,7 +5,7 @@ The key files are:
 
 1. `make.data.R`, finds eligible articles from specified journal lists, then reads the abstracts from Pubmed and calculates the number of decimal places making a dataset ready for analysis.
 
-2. `Analysis.Ready.RData`, `percents.data.xlsx` and `percents.data.txt`, the main dataset for analysis produced by `make.data.R` in R, Excel and tab-delimited format, respectively. 
+2. `Analysis.Ready.RData`, `Analysis.Ready.xlsx` and `Analysis.Ready.txt`, the main dataset for analysis produced by `make.data.R` in R, Excel and tab-delimited format, respectively. 
 
 3. `decimal.places.stats.Rmd`, Rmarkdown file to create the analyses shown in the paper. Was run using R version 3.4.4.
 
